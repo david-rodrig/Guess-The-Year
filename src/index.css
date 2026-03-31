@@ -1,0 +1,273 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Press+Start+2P&display=swap');
+
+:root {
+  --bg-color: #0b0c10;
+  --neo-cyan: #0ff;
+  --neo-magenta: #ff00ff;
+  --neo-yellow: #ffff00;
+  --neo-purple: #9d00ff;
+  --surface-glass: rgba(255, 255, 255, 0.05);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Orbitron', sans-serif;
+  background-color: var(--bg-color);
+  color: #fff;
+  overflow-x: hidden;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+.app-container {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+  overflow: hidden;
+}
+
+/* 80s Sun Effect */
+.sun {
+  position: absolute;
+  bottom: 0px;
+  width: 400px;
+  height: 400px;
+  background: linear-gradient(to bottom, #ff00ff 0%, #ffff00 100%);
+  border-radius: 50%;
+  box-shadow: 0 0 50px #ff00ff;
+  z-index: -2;
+  transform: translateY(30%);
+}
+
+/* Retrowave perspective Grid */
+.synthwave-grid {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  height: 40vh;
+  background: 
+    linear-gradient(transparent 65%, var(--neo-cyan) 70%, transparent 75%),
+    linear-gradient(90deg, transparent 48%, var(--neo-cyan) 50%, transparent 52%);
+  background-size: 100px 100px;
+  transform: perspective(500px) rotateX(60deg);
+  z-index: -1;
+  opacity: 0.8;
+  box-shadow: 0 -20px 50px rgba(0, 255, 255, 0.5);
+}
+
+.header {
+  margin-bottom: 3rem;
+  z-index: 10;
+}
+
+/* Neon Text Utilities */
+.neon-text {
+  font-family: 'Press Start 2P', cursive;
+  color: #fff;
+  text-shadow: 
+    0 0 5px #fff,
+    0 0 10px #fff,
+    0 0 20px var(--neo-magenta),
+    0 0 40px var(--neo-magenta),
+    0 0 80px var(--neo-magenta);
+  font-size: 2rem;
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.sub-text {
+  color: var(--neo-cyan);
+  font-weight: 900;
+  letter-spacing: 5px;
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  text-shadow: 0 0 10px var(--neo-cyan);
+}
+
+.glass-card {
+  background: var(--surface-glass);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  padding: 2.5rem;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37),
+              0 0 20px rgba(0, 255, 255, 0.2);
+  z-index: 10;
+}
+
+.score-board {
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+  color: #ccc;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.score-board .cyan {
+  color: var(--neo-cyan);
+  text-shadow: 0 0 5px var(--neo-cyan);
+}
+
+.song-info {
+  margin-bottom: 2.5rem;
+}
+
+.song-title {
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--neo-yellow);
+  text-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
+}
+
+.song-artist {
+  font-size: 1.2rem;
+  color: #ddd;
+  font-style: italic;
+}
+
+.guess-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.neon-input {
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px solid var(--neo-magenta);
+  padding: 1rem;
+  border-radius: 10px;
+  color: white;
+  font-size: 1.5rem;
+  text-align: center;
+  font-family: 'Orbitron', sans-serif;
+  outline: none;
+  transition: all 0.3s ease;
+  box-shadow: inset 0 0 10px rgba(255, 0, 255, 0.2);
+}
+
+.neon-input:focus {
+  border-color: var(--neo-cyan);
+  box-shadow: inset 0 0 10px rgba(0, 255, 255, 0.5), 0 0 15px rgba(0, 255, 255, 0.5);
+}
+
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+.neon-btn {
+  background: transparent;
+  color: #fff;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: bold;
+  font-size: 1.2rem;
+  padding: 1rem 2rem;
+  border: 2px solid var(--neo-cyan);
+  border-radius: 5px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.3), inset 0 0 15px rgba(0, 255, 255, 0.1);
+  text-shadow: 0 0 5px #fff;
+  letter-spacing: 2px;
+}
+
+.neon-btn:hover:not(:disabled) {
+  background: var(--neo-cyan);
+  color: black;
+  box-shadow: 0 0 30px var(--neo-cyan), inset 0 0 10px #fff;
+  text-shadow: none;
+}
+
+.neon-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-color: #555;
+  box-shadow: none;
+}
+
+.feedback-message {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 1.2rem;
+  animation: popIn 0.3s ease-out forwards;
+}
+
+.feedback-message.correct {
+  background: rgba(0, 255, 0, 0.2);
+  border: 1px solid lime;
+  color: lime;
+  text-shadow: 0 0 10px lime;
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+}
+
+.feedback-message.wrong {
+  background: rgba(255, 0, 0, 0.2);
+  border: 1px solid red;
+  color: #ff3333;
+  text-shadow: 0 0 10px red;
+  box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
+  animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+.neon-text.pink {
+  color: var(--neo-magenta);
+}
+
+.score-text {
+  font-size: 1.8rem;
+  margin: 2rem 0;
+  text-shadow: 0 0 5px #fff;
+}
+
+/* Animations */
+@keyframes popIn {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes shake {
+  10%, 90% { transform: translate3d(-2px, 0, 0); }
+  20%, 80% { transform: translate3d(4px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-8px, 0, 0); }
+  40%, 60% { transform: translate3d(8px, 0, 0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.8s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}

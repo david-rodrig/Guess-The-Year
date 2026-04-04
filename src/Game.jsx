@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from './lib/supabase';
 import { DECADES } from './DecadeSelect';
 
@@ -73,21 +73,32 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [score, setScore] = useState(0);
   const [guess, setGuess] = useState('');
-  const [feedback, setFeedback] = useState(null);
+  const [submittedGuess, setSubmittedGuess] = useState(null); // stored after submit, shown only at reveal
+  const [feedback, setFeedback] = useState(null);             // set at reveal time
   const [elapsedTime, setElapsedTime] = useState(0);
   const [hostSongs, setHostSongs] = useState([]);
   const [questionIndex, setQuestionIndex] = useState(-1);
+  const [guessedCount, setGuessedCount] = useState(0);        // how many players have submitted
 
+  // Refs for use inside callbacks / YT event handlers
   const ytPlayerRef = useRef(null);
-  const feedbackRef = useRef(null);
+  const revealedRef = useRef(false);
+  const submittedGuessRef = useRef(null);
+  const currentQuestionRef = useRef(null);
+  const channelRef = useRef(null);
+  const playersRef = useRef({});
+  const guessedIdsRef = useRef(new Set());
+  const scoreRef = useRef(0);
+
+  // Keep refs in sync
+  useEffect(() => { currentQuestionRef.current = currentQuestion; }, [currentQuestion]);
+  useEffect(() => { playersRef.current = players; }, [players]);
+  useEffect(() => { scoreRef.current = score; }, [score]);
 
   useEffect(() => {
     supabase.from('profiles').select('*').eq('id', user.id).single()
       .then(({ data }) => setProfile(data));
   }, [user.id]);
-
-  // Keep feedbackRef in sync so the YT callback always sees the latest value
-  useEffect(() => { feedbackRef.current = feedback; }, [feedback]);
 
   // Load YouTube IFrame API once
   useEffect(() => {
@@ -99,46 +110,71 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
     }
   }, []);
 
+  // ── Reveal answer ──────────────────────────────────────────────
+  const revealAnswer = useCallback(() => {
+    if (revealedRef.current) return;
+    revealedRef.current = true;
+
+    const q = currentQuestionRef.current;
+    if (!q) return;
+
+    const guessed = submittedGuessRef.current;
+    if (guessed === null) {
+      setFeedback({ message: `Time's up! The correct year was ${q.year}.`, isCorrect: false });
+      return;
+    }
+
+    const isCorrect = guessed === q.year;
+    if (isCorrect) {
+      setScore(s => {
+        const newer = s + 1;
+        channelRef.current?.send({ type: 'broadcast', event: 'score_update', payload: { userId: user.id, newScore: newer } });
+        setPlayers(prev => ({ ...prev, [user.id]: { ...prev[user.id], score: newer } }));
+        return newer;
+      });
+      setFeedback({ message: `Correct! It was released in ${q.year}.`, isCorrect: true });
+    } else {
+      setFeedback({ message: `Wrong! The correct year was ${q.year}.`, isCorrect: false });
+    }
+  }, [user.id]);
+
+  // Check if all players have submitted → reveal
+  const checkAllGuessed = useCallback((newCount) => {
+    const total = Object.keys(playersRef.current).length;
+    if (total > 0 && newCount >= total) {
+      revealAnswer();
+    }
+  }, [revealAnswer]);
+
   // Create/recreate YT player when question changes
   useEffect(() => {
     if (!currentQuestion) return;
 
     const createPlayer = () => {
-      if (ytPlayerRef.current) {
-        ytPlayerRef.current.destroy();
-        ytPlayerRef.current = null;
-      }
+      if (ytPlayerRef.current) { ytPlayerRef.current.destroy(); ytPlayerRef.current = null; }
       ytPlayerRef.current = new window.YT.Player('yt-player', {
         videoId: currentQuestion.youtubeId,
         playerVars: { autoplay: 1, controls: 1, rel: 0 },
         events: {
           onStateChange: (e) => {
-            if (e.data === window.YT.PlayerState.ENDED && !feedbackRef.current) {
-              setFeedback({ message: `Time's up! The correct year was ${currentQuestion.year}.`, isCorrect: false });
-            }
+            if (e.data === window.YT.PlayerState.ENDED) revealAnswer();
           }
         }
       });
     };
 
-    if (window.YT && window.YT.Player) {
-      createPlayer();
-    } else {
-      window.onYouTubeIframeAPIReady = createPlayer;
-    }
+    if (window.YT && window.YT.Player) createPlayer();
+    else window.onYouTubeIframeAPIReady = createPlayer;
 
-    return () => {
-      if (ytPlayerRef.current) {
-        ytPlayerRef.current.destroy();
-        ytPlayerRef.current = null;
-      }
-    };
-  }, [currentQuestion]);
+    return () => { if (ytPlayerRef.current) { ytPlayerRef.current.destroy(); ytPlayerRef.current = null; } };
+  }, [currentQuestion, revealAnswer]);
 
+  // Realtime channel
   useEffect(() => {
     const ch = supabase.channel(`room:${roomCode}`, {
       config: { presence: { key: user.id } }
     });
+    channelRef.current = ch;
 
     ch.on('presence', { event: 'sync' }, () => {
       const state = ch.presenceState();
@@ -154,19 +190,26 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
       });
     });
 
-    ch.on('broadcast', { event: 'score_update' }, (payload) => {
-      const { userId, newScore } = payload.payload;
+    ch.on('broadcast', { event: 'score_update' }, ({ payload }) => {
       setPlayers(prev => ({
         ...prev,
-        [userId]: { ...prev[userId], score: newScore }
+        [payload.userId]: { ...prev[payload.userId], score: payload.newScore }
       }));
     });
 
-    ch.on('broadcast', { event: 'new_question' }, (payload) => {
-      setCurrentQuestion(payload.payload.song);
-      setFeedback(null);
-      setGuess('');
-      setElapsedTime(0);
+    ch.on('broadcast', { event: 'new_question' }, ({ payload }) => {
+      resetQuestion(payload.song);
+    });
+
+    ch.on('broadcast', { event: 'player_guessed' }, ({ payload }) => {
+      if (!guessedIdsRef.current.has(payload.userId)) {
+        guessedIdsRef.current.add(payload.userId);
+        setGuessedCount(prev => {
+          const next = prev + 1;
+          checkAllGuessed(next);
+          return next;
+        });
+      }
     });
 
     ch.subscribe(async (status) => {
@@ -177,9 +220,10 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
     });
 
     setChannel(ch);
-    return () => { ch.unsubscribe(); };
-  }, [roomCode, user.id, profile]);
+    return () => { ch.unsubscribe(); channelRef.current = null; };
+  }, [roomCode, user.id, profile, checkAllGuessed]);
 
+  // Timer — stops when feedback is shown (revealed)
   useEffect(() => {
     let timer;
     if (currentQuestion && feedback === null) {
@@ -187,6 +231,19 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
     }
     return () => clearInterval(timer);
   }, [currentQuestion, feedback]);
+
+  // ── Helpers ────────────────────────────────────────────────────
+  const resetQuestion = (song) => {
+    revealedRef.current = false;
+    submittedGuessRef.current = null;
+    guessedIdsRef.current = new Set();
+    setCurrentQuestion(song);
+    setFeedback(null);
+    setSubmittedGuess(null);
+    setGuess('');
+    setElapsedTime(0);
+    setGuessedCount(0);
+  };
 
   const handleHostNextQuestion = () => {
     let list = hostSongs;
@@ -203,41 +260,31 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
     if (nextIdx < list.length) {
       const song = list[nextIdx];
       channel.send({ type: 'broadcast', event: 'new_question', payload: { song } });
-      setCurrentQuestion(song);
-      setFeedback(null);
-      setGuess('');
-      setElapsedTime(0);
+      resetQuestion(song);
     }
   };
 
   const handleGuess = (e) => {
     e.preventDefault();
-    if (!guess) return;
+    if (!guess || submittedGuess !== null) return;
 
     const guessedYear = parseInt(guess);
-    let isCorrect = false;
-    let message = '';
+    submittedGuessRef.current = guessedYear;
+    setSubmittedGuess(guessedYear);
 
-    if (guessedYear === currentQuestion.year) {
-      isCorrect = true;
-      message = `Correct! It was released in ${currentQuestion.year}.`;
-      setScore(s => {
-        const newer = s + 1;
-        channel.send({ type: 'broadcast', event: 'score_update', payload: { userId: user.id, newScore: newer } });
-        setPlayers(prev => ({
-          ...prev,
-          [user.id]: { ...prev[user.id], score: newer }
-        }));
-        return newer;
-      });
-    } else {
-      message = `Wrong! The correct year was ${currentQuestion.year}.`;
-    }
+    // Broadcast that this player submitted (not the guess value)
+    channel.send({ type: 'broadcast', event: 'player_guessed', payload: { userId: user.id } });
 
-    setFeedback({ message, isCorrect });
+    // Count self (own broadcast not received)
+    guessedIdsRef.current.add(user.id);
+    const next = guessedIdsRef.current.size;
+    setGuessedCount(next);
+    checkAllGuessed(next);
   };
 
   if (!channel) return <div className="loading">Connecting to Room...</div>;
+
+  const playerCount = Object.keys(players).length;
 
   return (
     <div className="glass-card game-card fade-in" style={{ margin: 'auto', marginTop: 'clamp(1rem, 4vh, 3rem)', marginBottom: '1rem' }}>
@@ -248,7 +295,7 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
             ROOM: {roomCode}
           </h2>
           <p style={{ color: '#aaa', fontSize: 'clamp(0.7rem, 2vw, 0.9rem)' }}>
-            Players: {Object.keys(players).length}/10
+            Players: {playerCount}/10
           </p>
         </div>
         <button className="logout-btn" onClick={onLeave}>Leave</button>
@@ -261,7 +308,6 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
 
       {/* Body */}
       <div className="game-body">
-        {/* Main game area */}
         <div className="game-main">
           {currentQuestion ? (
             <div className="fade-in">
@@ -274,23 +320,35 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
                 <h3 className="song-artist">by {currentQuestion.artist}</h3>
               </div>
 
-              <form onSubmit={handleGuess} className="guess-form inline">
-                <input
-                  type="number"
-                  min="1970" max="2024"
-                  placeholder="Year"
-                  value={guess}
-                  onChange={(e) => setGuess(e.target.value)}
-                  className="neon-input year-input"
-                  disabled={feedback !== null}
-                />
-                <span className="neon-text pink" style={{ fontSize: '1.1rem', margin: '0 6px' }}>{elapsedTime}s</span>
-                <button type="submit" className="neon-btn" disabled={feedback !== null || !guess}>
-                  GUESS
-                </button>
-              </form>
-
-              {feedback && (
+              {!feedback ? (
+                <>
+                  {submittedGuess === null ? (
+                    <form onSubmit={handleGuess} className="guess-form inline">
+                      <input
+                        type="number"
+                        min="1970" max="2024"
+                        placeholder="Year"
+                        value={guess}
+                        onChange={(e) => setGuess(e.target.value)}
+                        className="neon-input year-input"
+                      />
+                      <span className="neon-text pink" style={{ fontSize: '1.1rem', margin: '0 6px' }}>{elapsedTime}s</span>
+                      <button type="submit" className="neon-btn" disabled={!guess}>
+                        GUESS
+                      </button>
+                    </form>
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: '1rem', color: '#0ff' }}>
+                      <p style={{ fontSize: 'clamp(0.8rem, 2vw, 1rem)', letterSpacing: '1px' }}>
+                        ✓ You guessed <strong>{submittedGuess}</strong> — waiting for others...
+                      </p>
+                      <p style={{ fontSize: 'clamp(0.65rem, 1.5vw, 0.8rem)', color: '#aaa', marginTop: '0.5rem' }}>
+                        {guessedCount}/{playerCount} submitted
+                      </p>
+                    </div>
+                  )}
+                </>
+              ) : (
                 <div className={`feedback-message ${feedback.isCorrect ? 'correct' : 'wrong'}`}>
                   {feedback.message}
                 </div>
@@ -303,14 +361,7 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
                   <p style={{ marginBottom: '0.5rem', fontSize: 'clamp(0.75rem, 2vw, 0.95rem)', color: '#aaa', letterSpacing: '2px' }}>
                     SHARE THIS CODE WITH PLAYERS
                   </p>
-                  <div style={{
-                    fontSize: 'clamp(2.5rem, 10vw, 4rem)',
-                    fontFamily: "'Press Start 2P', cursive",
-                    color: '#ffff00',
-                    textShadow: '0 0 20px #ffff00, 0 0 40px #ffff00',
-                    letterSpacing: '0.2em',
-                    margin: '0.5rem 0 1.5rem',
-                  }}>
+                  <div style={{ fontSize: 'clamp(2.5rem, 10vw, 4rem)', fontFamily: "'Press Start 2P', cursive", color: '#ffff00', textShadow: '0 0 20px #ffff00, 0 0 40px #ffff00', letterSpacing: '0.2em', margin: '0.5rem 0 1.5rem' }}>
                     {roomCode}
                   </div>
                   <button className="neon-btn" style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1.4rem)', padding: '1rem 2.5rem' }} onClick={handleHostNextQuestion}>
@@ -319,17 +370,8 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
                 </>
               ) : (
                 <>
-                  <p style={{ marginBottom: '0.5rem', fontSize: 'clamp(0.75rem, 2vw, 0.95rem)', color: '#aaa', letterSpacing: '2px' }}>
-                    ROOM CODE
-                  </p>
-                  <div style={{
-                    fontSize: 'clamp(2.5rem, 10vw, 4rem)',
-                    fontFamily: "'Press Start 2P', cursive",
-                    color: '#0ff',
-                    textShadow: '0 0 20px #0ff, 0 0 40px #0ff',
-                    letterSpacing: '0.2em',
-                    margin: '0.5rem 0 1.5rem',
-                  }}>
+                  <p style={{ marginBottom: '0.5rem', fontSize: 'clamp(0.75rem, 2vw, 0.95rem)', color: '#aaa', letterSpacing: '2px' }}>ROOM CODE</p>
+                  <div style={{ fontSize: 'clamp(2.5rem, 10vw, 4rem)', fontFamily: "'Press Start 2P', cursive", color: '#0ff', textShadow: '0 0 20px #0ff, 0 0 40px #0ff', letterSpacing: '0.2em', margin: '0.5rem 0 1.5rem' }}>
                     {roomCode}
                   </div>
                   <h3 style={{ fontSize: 'clamp(0.85rem, 2.5vw, 1.1rem)' }}>Waiting for Host to start...</h3>
@@ -339,7 +381,7 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
           )}
         </div>
 
-        {/* Leaderboard sidebar */}
+        {/* Leaderboard */}
         <div className="game-sidebar">
           <h3 className="neon-text magenta" style={{ fontSize: 'clamp(0.65rem, 2vw, 1rem)', marginBottom: '0.5rem' }}>LEADERBOARD</h3>
           {Object.entries(players)
@@ -350,11 +392,12 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
                   src={p.info?.avatar}
                   alt="avatar"
                   className="player-avatar"
-                  style={{ border: playerId === user.id ? '2px solid lime' : '1px solid gray' }}
+                  style={{ border: playerId === user.id ? '2px solid lime' : '1px solid gray', opacity: guessedIdsRef.current.has(playerId) && !feedback ? 0.5 : 1 }}
                 />
                 <div style={{ textAlign: 'left', minWidth: 0 }}>
                   <div style={{ fontWeight: 'bold', fontSize: 'clamp(0.65rem, 2vw, 0.85rem)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {p.info?.name} {isHost && playerId === user.id ? '👑' : ''}
+                    {guessedIdsRef.current.has(playerId) && !feedback ? ' ✓' : ''}
                   </div>
                   <div className="neon-text cyan" style={{ fontSize: '0.75rem' }}>
                     Score: {p.score || 0}

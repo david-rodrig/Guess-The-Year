@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -X POST https://api.supabase.com/v1/projects/hgcduizydlpbkdyiltvu/database/query -H 'Authorization: Bearer sbp_49b9ae3b15816a754147b26ab15b5726babc5f81' -H 'Content-Type: application/json' -d '{\"query\": \"SELECT id, name, public FROM storage.buckets;\"}')"
+    ]
+  }
+}

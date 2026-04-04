@@ -386,6 +386,13 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
         {/* Full leaderboard overlay after reveal */}
         {showLeaderboard && (
           <div className="leaderboard-overlay fade-in">
+            {currentQuestion && (
+              <div style={{ textAlign: 'center', marginBottom: '1.25rem', padding: '0.75rem', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(0,255,255,0.2)' }}>
+                <p style={{ color: '#aaa', fontSize: 'clamp(0.6rem, 1.5vw, 0.75rem)', letterSpacing: '2px', marginBottom: '0.3rem' }}>THE ANSWER WAS</p>
+                <p style={{ fontFamily: "'Press Start 2P', cursive", fontSize: 'clamp(1.5rem, 5vw, 2.5rem)', color: '#ffff00', textShadow: '0 0 15px #ffff00' }}>{currentQuestion.year}</p>
+                <p style={{ color: '#ccc', fontSize: 'clamp(0.7rem, 2vw, 0.9rem)', marginTop: '0.3rem' }}>"{currentQuestion.title}" — {currentQuestion.artist}</p>
+              </div>
+            )}
             <h2 className="neon-text cyan" style={{ fontSize: 'clamp(0.9rem, 3vw, 1.3rem)', marginBottom: '1.25rem' }}>
               LEADERBOARD
             </h2>

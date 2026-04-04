@@ -31,7 +31,6 @@ export default function App() {
     <div className="app-container">
       {/* Background aesthetics persist */}
       <div className="synthwave-grid"></div>
-      <div className="sun"></div>
       
       <header className="header" style={{ position: 'relative', zIndex: 10 }}>
         <h1 className="neon-text" style={{ fontSize: room ? '1.5rem' : '2rem' }}>GUESS THE YEAR</h1>

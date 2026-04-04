@@ -235,7 +235,7 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
               <form onSubmit={handleGuess} className="guess-form inline">
                 <input
                   type="number"
-                  min="1980" max="1989"
+                  min="1970" max="2024"
                   placeholder="Year"
                   value={guess}
                   onChange={(e) => setGuess(e.target.value)}

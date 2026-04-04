@@ -144,6 +144,11 @@ export default function Game({ user, roomCode, isHost }) {
       setScore(s => {
         const newer = s + 1;
         channel.send({ type: 'broadcast', event: 'score_update', payload: { userId: user.id, newScore: newer } });
+        // Sender doesn't receive own broadcast, so update locally too
+        setPlayers(prev => ({
+          ...prev,
+          [user.id]: { ...prev[user.id], score: newer }
+        }));
         return newer;
       });
     } else {

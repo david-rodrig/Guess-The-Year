@@ -211,13 +211,40 @@ export default function Game({ user, roomCode, isHost }) {
             <div style={{ padding: '2rem 1rem', textAlign: 'center', color: '#ccc' }}>
               {isHost ? (
                 <>
-                  <h3 style={{ marginBottom: '1.5rem', fontSize: 'clamp(0.85rem, 2.5vw, 1.1rem)' }}>Ready when you are!</h3>
+                  <p style={{ marginBottom: '0.5rem', fontSize: 'clamp(0.75rem, 2vw, 0.95rem)', color: '#aaa', letterSpacing: '2px' }}>
+                    SHARE THIS CODE WITH PLAYERS
+                  </p>
+                  <div style={{
+                    fontSize: 'clamp(2.5rem, 10vw, 4rem)',
+                    fontFamily: "'Press Start 2P', cursive",
+                    color: '#ffff00',
+                    textShadow: '0 0 20px #ffff00, 0 0 40px #ffff00',
+                    letterSpacing: '0.2em',
+                    margin: '0.5rem 0 1.5rem',
+                  }}>
+                    {roomCode}
+                  </div>
                   <button className="neon-btn" style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1.4rem)', padding: '1rem 2.5rem' }} onClick={handleHostNextQuestion}>
                     START GAME
                   </button>
                 </>
               ) : (
-                <h3 style={{ fontSize: 'clamp(0.85rem, 2.5vw, 1.1rem)' }}>Waiting for Host to start...</h3>
+                <>
+                  <p style={{ marginBottom: '0.5rem', fontSize: 'clamp(0.75rem, 2vw, 0.95rem)', color: '#aaa', letterSpacing: '2px' }}>
+                    ROOM CODE
+                  </p>
+                  <div style={{
+                    fontSize: 'clamp(2.5rem, 10vw, 4rem)',
+                    fontFamily: "'Press Start 2P', cursive",
+                    color: '#0ff',
+                    textShadow: '0 0 20px #0ff, 0 0 40px #0ff',
+                    letterSpacing: '0.2em',
+                    margin: '0.5rem 0 1.5rem',
+                  }}>
+                    {roomCode}
+                  </div>
+                  <h3 style={{ fontSize: 'clamp(0.85rem, 2.5vw, 1.1rem)' }}>Waiting for Host to start...</h3>
+                </>
               )}
             </div>
           )}

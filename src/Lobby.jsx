@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
+import DecadeSelect from './DecadeSelect';
 
 export default function Lobby({ user, onRoomJoined }) {
   const [roomCode, setRoomCode] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState(null);
+  const [pickingDecades, setPickingDecades] = useState(false);
 
   useEffect(() => {
     async function loadProfile() {
@@ -17,7 +19,7 @@ export default function Lobby({ user, onRoomJoined }) {
 
   const generateCode = () => String(Math.floor(1000 + Math.random() * 9000));
 
-  const handleCreateRoom = async () => {
+  const handleCreateRoom = async (selectedDecades) => {
     setError(null);
     setLoading(true);
     try {
@@ -26,9 +28,10 @@ export default function Lobby({ user, onRoomJoined }) {
         { code, host_id: user.id, status: 'playing' }
       ]);
       if (dbError) throw dbError;
-      onRoomJoined(code, true);
+      onRoomJoined(code, true, selectedDecades);
     } catch (err) {
       setError(err.message);
+      setPickingDecades(false);
     } finally {
       setLoading(false);
     }
@@ -46,7 +49,7 @@ export default function Lobby({ user, onRoomJoined }) {
         .eq('code', roomCode)
         .single();
       if (dbError || !data) throw new Error('Room not found or invalid.');
-      onRoomJoined(data.code, data.host_id === user.id);
+      onRoomJoined(data.code, data.host_id === user.id, null);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -58,6 +61,23 @@ export default function Lobby({ user, onRoomJoined }) {
     await supabase.auth.signOut();
     window.location.reload();
   };
+
+  // Show decade picker for host before creating room
+  if (pickingDecades) {
+    return (
+      <div style={{ width: '100%', maxWidth: '480px', margin: 'auto' }}>
+        <button
+          onClick={() => setPickingDecades(false)}
+          className="logout-btn"
+          style={{ marginBottom: '1rem', display: 'block' }}
+        >
+          ← Back
+        </button>
+        <DecadeSelect onConfirm={(decades) => handleCreateRoom(decades)} />
+        {error && <div className="feedback-message wrong" style={{ marginTop: '1rem' }}>{error}</div>}
+      </div>
+    );
+  }
 
   return (
     <div className="glass-card lobby-card fade-in">
@@ -82,8 +102,8 @@ export default function Lobby({ user, onRoomJoined }) {
       )}
 
       <div style={{ borderTop: '1px solid rgba(0, 255, 255, 0.3)', paddingTop: '1.25rem', marginTop: '0.5rem' }}>
-        <button className="neon-btn full-width" onClick={handleCreateRoom} disabled={loading}>
-          {loading ? 'WAIT...' : 'CREATE NEW HOST ROOM'}
+        <button className="neon-btn full-width" onClick={() => setPickingDecades(true)} disabled={loading}>
+          CREATE NEW HOST ROOM
         </button>
       </div>
 
@@ -91,13 +111,12 @@ export default function Lobby({ user, onRoomJoined }) {
 
       <form onSubmit={handleJoinRoom} className="guess-form">
         <input
-          type="text"
+          type="number"
           placeholder="ENTER ROOM CODE"
           value={roomCode}
           onChange={(e) => setRoomCode(e.target.value)}
           className="neon-input"
           maxLength={4}
-          type="number"
         />
         <button
           type="submit"

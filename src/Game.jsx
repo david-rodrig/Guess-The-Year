@@ -215,7 +215,16 @@ export default function Game({ user, roomCode, isHost }) {
             </div>
           ) : (
             <div style={{ padding: '3rem', textAlign: 'center', color: '#ccc' }}>
-              <h3>Waiting for Host to start...</h3>
+              {isHost ? (
+                <>
+                  <h3 style={{ marginBottom: '1.5rem' }}>Ready when you are!</h3>
+                  <button className="neon-btn" style={{ fontSize: '1.4rem', padding: '1rem 2.5rem' }} onClick={handleHostNextQuestion}>
+                    START GAME
+                  </button>
+                </>
+              ) : (
+                <h3>Waiting for Host to start...</h3>
+              )}
             </div>
           )}
         </div>

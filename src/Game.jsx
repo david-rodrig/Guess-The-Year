@@ -121,18 +121,27 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
 
     const guessed = submittedGuessRef.current;
     if (guessed === null) {
-      setFeedback({ message: `Time's up! The correct year was ${q.year}.`, isCorrect: false });
+      setFeedback({ message: `Time's up! The correct year was ${q.year}.`, isCorrect: false, points: 0 });
     } else {
-      const isCorrect = guessed === q.year;
-      if (isCorrect) {
+      const diff = Math.abs(guessed - q.year);
+      const points = Math.max(0, 10 - diff * 2);
+      const isCorrect = diff === 0;
+
+      if (points > 0) {
         setScore(s => {
-          const newer = s + 1;
+          const newer = s + points;
           channelRef.current?.send({ type: 'broadcast', event: 'score_update', payload: { userId: user.id, newScore: newer } });
           setPlayers(prev => ({ ...prev, [user.id]: { ...prev[user.id], score: newer } }));
           return newer;
         });
       }
-      setFeedback({ message: isCorrect ? `Correct! It was released in ${q.year}.` : `Wrong! The correct year was ${q.year}.`, isCorrect });
+
+      let message;
+      if (diff === 0)      message = `Perfect! +10 pts — It was ${q.year}.`;
+      else if (points > 0) message = `Close! +${points} pts — The correct year was ${q.year}.`;
+      else                 message = `Miss! 0 pts — The correct year was ${q.year}.`;
+
+      setFeedback({ message, isCorrect, points });
     }
 
     // Show full leaderboard 1s after reveal
@@ -351,7 +360,7 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
                   )}
                 </>
               ) : (
-                <div className={`feedback-message ${feedback.isCorrect ? 'correct' : 'wrong'}`}>
+                <div className={`feedback-message ${feedback.isCorrect ? 'correct' : feedback.points > 0 ? 'close' : 'wrong'}`}>
                   {feedback.message}
                 </div>
               )}

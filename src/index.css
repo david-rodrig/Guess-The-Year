@@ -260,6 +260,14 @@ input[type=number] {
   box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
 }
 
+.feedback-message.close {
+  background: rgba(255, 200, 0, 0.15);
+  border: 1px solid #ffc800;
+  color: #ffc800;
+  text-shadow: 0 0 10px #ffc800;
+  box-shadow: 0 0 20px rgba(255, 200, 0, 0.3);
+}
+
 .feedback-message.wrong {
   background: rgba(255, 0, 0, 0.2);
   border: 1px solid red;

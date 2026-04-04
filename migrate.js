@@ -2,7 +2,7 @@ import fs from 'fs';
 import pkg from 'pg';
 const { Client } = pkg;
 
-const connectionString = 'postgresql://postgres:ngr2PGX9mJ0o1wSs@db.ebvwwpvnasxngnvhyele.supabase.co:5432/postgres';
+const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:[YOUR-PASSWORD]@db.hgcduizydlpbkdyiltvu.supabase.co:5432/postgres';
 
 async function migrate() {
   const client = new Client({ connectionString });

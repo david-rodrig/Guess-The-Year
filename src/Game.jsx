@@ -79,6 +79,7 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
   const [hostSongs, setHostSongs] = useState([]);
   const [questionIndex, setQuestionIndex] = useState(-1);
   const [guessedCount, setGuessedCount] = useState(0);        // how many players have submitted
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
 
   // Refs for use inside callbacks / YT event handlers
   const ytPlayerRef = useRef(null);
@@ -121,21 +122,21 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
     const guessed = submittedGuessRef.current;
     if (guessed === null) {
       setFeedback({ message: `Time's up! The correct year was ${q.year}.`, isCorrect: false });
-      return;
+    } else {
+      const isCorrect = guessed === q.year;
+      if (isCorrect) {
+        setScore(s => {
+          const newer = s + 1;
+          channelRef.current?.send({ type: 'broadcast', event: 'score_update', payload: { userId: user.id, newScore: newer } });
+          setPlayers(prev => ({ ...prev, [user.id]: { ...prev[user.id], score: newer } }));
+          return newer;
+        });
+      }
+      setFeedback({ message: isCorrect ? `Correct! It was released in ${q.year}.` : `Wrong! The correct year was ${q.year}.`, isCorrect });
     }
 
-    const isCorrect = guessed === q.year;
-    if (isCorrect) {
-      setScore(s => {
-        const newer = s + 1;
-        channelRef.current?.send({ type: 'broadcast', event: 'score_update', payload: { userId: user.id, newScore: newer } });
-        setPlayers(prev => ({ ...prev, [user.id]: { ...prev[user.id], score: newer } }));
-        return newer;
-      });
-      setFeedback({ message: `Correct! It was released in ${q.year}.`, isCorrect: true });
-    } else {
-      setFeedback({ message: `Wrong! The correct year was ${q.year}.`, isCorrect: false });
-    }
+    // Show full leaderboard 1s after reveal
+    setTimeout(() => setShowLeaderboard(true), 1000);
   }, [user.id]);
 
   // Check if all players have submitted → reveal
@@ -243,6 +244,7 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
     setGuess('');
     setElapsedTime(0);
     setGuessedCount(0);
+    setShowLeaderboard(false);
   };
 
   const handleHostNextQuestion = () => {
@@ -287,7 +289,7 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
   const playerCount = Object.keys(players).length;
 
   return (
-    <div className="glass-card game-card fade-in" style={{ margin: 'auto', marginTop: 'clamp(1rem, 4vh, 3rem)', marginBottom: '1rem' }}>
+    <div className="glass-card game-card fade-in" style={{ margin: 'auto', marginTop: 'clamp(1rem, 4vh, 3rem)', marginBottom: '1rem', position: 'relative' }}>
       {/* Header */}
       <div className="game-header">
         <div>
@@ -381,7 +383,45 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
           )}
         </div>
 
-        {/* Leaderboard */}
+        {/* Full leaderboard overlay after reveal */}
+        {showLeaderboard && (
+          <div className="leaderboard-overlay fade-in">
+            <h2 className="neon-text cyan" style={{ fontSize: 'clamp(0.9rem, 3vw, 1.3rem)', marginBottom: '1.25rem' }}>
+              LEADERBOARD
+            </h2>
+            {Object.entries(players)
+              .sort(([, a], [, b]) => (b.score || 0) - (a.score || 0))
+              .map(([playerId, p], i) => (
+                <div key={playerId} style={{
+                  display: 'flex', alignItems: 'center', gap: '1rem',
+                  padding: '0.75rem 1rem', marginBottom: '0.5rem',
+                  borderRadius: '10px',
+                  background: playerId === user.id ? 'rgba(0,255,255,0.1)' : 'rgba(255,255,255,0.04)',
+                  border: `1px solid ${playerId === user.id ? '#0ff' : '#333'}`,
+                }}>
+                  <span style={{ fontFamily: "'Press Start 2P', cursive", fontSize: 'clamp(0.8rem, 2.5vw, 1.1rem)', color: i === 0 ? '#ffff00' : i === 1 ? '#aaa' : i === 2 ? '#cd7f32' : '#555', minWidth: '1.5rem' }}>
+                    {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`}
+                  </span>
+                  <img src={p.info?.avatar} alt="avatar" style={{ width: '42px', height: '42px', borderRadius: '50%', border: '1px solid #444' }} />
+                  <div style={{ flex: 1, textAlign: 'left' }}>
+                    <div style={{ fontWeight: 'bold', fontSize: 'clamp(0.75rem, 2vw, 0.95rem)' }}>
+                      {p.info?.name}{playerId === user.id ? ' (you)' : ''}
+                    </div>
+                  </div>
+                  <div style={{ fontFamily: "'Press Start 2P', cursive", fontSize: 'clamp(0.8rem, 2.5vw, 1.1rem)', color: '#0ff', textShadow: '0 0 8px #0ff' }}>
+                    {p.score || 0} pts
+                  </div>
+                </div>
+              ))}
+            {isHost && (
+              <button className="neon-btn full-width" style={{ marginTop: '1.25rem' }} onClick={handleHostNextQuestion}>
+                NEXT SONG →
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Sidebar leaderboard */}
         <div className="game-sidebar">
           <h3 className="neon-text magenta" style={{ fontSize: 'clamp(0.65rem, 2vw, 1rem)', marginBottom: '0.5rem' }}>LEADERBOARD</h3>
           {Object.entries(players)

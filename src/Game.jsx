@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from './lib/supabase';
 import { DECADES } from './DecadeSelect';
 
@@ -78,10 +78,62 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
   const [hostSongs, setHostSongs] = useState([]);
   const [questionIndex, setQuestionIndex] = useState(-1);
 
+  const ytPlayerRef = useRef(null);
+  const feedbackRef = useRef(null);
+
   useEffect(() => {
     supabase.from('profiles').select('*').eq('id', user.id).single()
       .then(({ data }) => setProfile(data));
   }, [user.id]);
+
+  // Keep feedbackRef in sync so the YT callback always sees the latest value
+  useEffect(() => { feedbackRef.current = feedback; }, [feedback]);
+
+  // Load YouTube IFrame API once
+  useEffect(() => {
+    if (!document.getElementById('yt-api-script')) {
+      const tag = document.createElement('script');
+      tag.id = 'yt-api-script';
+      tag.src = 'https://www.youtube.com/iframe_api';
+      document.head.appendChild(tag);
+    }
+  }, []);
+
+  // Create/recreate YT player when question changes
+  useEffect(() => {
+    if (!currentQuestion) return;
+
+    const createPlayer = () => {
+      if (ytPlayerRef.current) {
+        ytPlayerRef.current.destroy();
+        ytPlayerRef.current = null;
+      }
+      ytPlayerRef.current = new window.YT.Player('yt-player', {
+        videoId: currentQuestion.youtubeId,
+        playerVars: { autoplay: 1, controls: 1, rel: 0 },
+        events: {
+          onStateChange: (e) => {
+            if (e.data === window.YT.PlayerState.ENDED && !feedbackRef.current) {
+              setFeedback({ message: `Time's up! The correct year was ${currentQuestion.year}.`, isCorrect: false });
+            }
+          }
+        }
+      });
+    };
+
+    if (window.YT && window.YT.Player) {
+      createPlayer();
+    } else {
+      window.onYouTubeIframeAPIReady = createPlayer;
+    }
+
+    return () => {
+      if (ytPlayerRef.current) {
+        ytPlayerRef.current.destroy();
+        ytPlayerRef.current = null;
+      }
+    };
+  }, [currentQuestion]);
 
   useEffect(() => {
     const ch = supabase.channel(`room:${roomCode}`, {
@@ -213,18 +265,8 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
         <div className="game-main">
           {currentQuestion ? (
             <div className="fade-in">
-              <div style={{ marginBottom: '1.25rem', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 0 15px rgba(0, 255, 255, 0.3)', aspectRatio: '16/9' }}>
-                <iframe
-                  key={currentQuestion.youtubeId}
-                  width="100%"
-                  height="100%"
-                  src={`https://www.youtube.com/embed/${currentQuestion.youtubeId}?autoplay=1&mute=0&controls=0&disablekb=1&showinfo=0`}
-                  title="YouTube video player"
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  style={{ display: 'block' }}
-                />
+              <div style={{ marginBottom: '1.25rem', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 0 15px rgba(0, 255, 255, 0.3)', aspectRatio: '16/9', background: '#000' }}>
+                <div id="yt-player" style={{ width: '100%', height: '100%' }} />
               </div>
 
               <div className="song-info">

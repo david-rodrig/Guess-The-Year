@@ -10,13 +10,11 @@ export const DECADES = [
 ];
 
 export default function DecadeSelect({ onConfirm }) {
-  const [selected, setSelected] = useState(DECADES.map(d => d.label));
+  const [selected, setSelected] = useState([]);
 
   const toggle = (label) => {
     setSelected(prev =>
-      prev.includes(label)
-        ? prev.length > 1 ? prev.filter(d => d !== label) : prev
-        : [...prev, label]
+      prev.includes(label) ? prev.filter(d => d !== label) : [...prev, label]
     );
   };
 
@@ -72,8 +70,9 @@ export default function DecadeSelect({ onConfirm }) {
         className="neon-btn full-width"
         style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1.2rem)', padding: '0.9rem' }}
         onClick={() => onConfirm(selected)}
+        disabled={selected.length === 0}
       >
-        LET'S PLAY →
+        {selected.length === 0 ? 'SELECT A DECADE' : 'LET\'S PLAY →'}
       </button>
     </div>
   );

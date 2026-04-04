@@ -33,8 +33,8 @@ export default function App() {
       <div className="synthwave-grid"></div>
       
       <header className="header" style={{ position: 'relative', zIndex: 10 }}>
-        <h1 className="neon-text" style={{ fontSize: room ? '1.5rem' : '2rem' }}>GUESS THE YEAR</h1>
-        <p className="sub-text" style={{ fontSize: room ? '0.8rem' : '1.2rem' }}>80s Edition • Multiplayer</p>
+        <h1 className="neon-text" style={{ fontSize: room ? 'clamp(0.8rem, 3vw, 1.5rem)' : 'clamp(1rem, 5vw, 2rem)' }}>GUESS THE YEAR</h1>
+        <p className="sub-text" style={{ fontSize: room ? 'clamp(0.5rem, 1.5vw, 0.8rem)' : 'clamp(0.6rem, 2.5vw, 1.2rem)' }}>80s Edition • Multiplayer</p>
       </header>
 
       <main className="main-content" style={{ width: '100%', position: 'relative', zIndex: 10 }}>

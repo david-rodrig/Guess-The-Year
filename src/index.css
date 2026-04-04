@@ -20,15 +20,12 @@ body {
   background-color: var(--bg-color);
   color: #fff;
   overflow-x: hidden;
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  min-height: 100vh;
 }
 
 #root {
   width: 100%;
-  height: 100%;
+  min-height: 100vh;
 }
 
 .app-container {
@@ -39,65 +36,72 @@ body {
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 2rem;
+  padding: 1rem;
   overflow: hidden;
-}
-
-/* 80s Sun Effect */
-.sun {
-  position: absolute;
-  bottom: 0px;
-  width: 400px;
-  height: 400px;
-  background: linear-gradient(to bottom, #ff00ff 0%, #ffff00 100%);
-  border-radius: 50%;
-  box-shadow: 0 0 50px #ff00ff;
-  z-index: -2;
-  transform: translateY(30%);
 }
 
 /* Retrowave perspective Grid */
 .synthwave-grid {
-  position: absolute;
+  position: fixed;
   bottom: 0;
   left: 0;
   width: 100vw;
   height: 40vh;
-  background: 
+  background:
     linear-gradient(transparent 65%, var(--neo-cyan) 70%, transparent 75%),
     linear-gradient(90deg, transparent 48%, var(--neo-cyan) 50%, transparent 52%);
   background-size: 100px 100px;
   transform: perspective(500px) rotateX(60deg);
-  z-index: -1;
+  z-index: 0;
   opacity: 0.8;
   box-shadow: 0 -20px 50px rgba(0, 255, 255, 0.5);
+  pointer-events: none;
 }
 
 .header {
-  margin-bottom: 3rem;
+  margin-bottom: 1.5rem;
   z-index: 10;
+  width: 100%;
 }
 
 /* Neon Text Utilities */
 .neon-text {
   font-family: 'Press Start 2P', cursive;
   color: #fff;
-  text-shadow: 
+  text-shadow:
     0 0 5px #fff,
     0 0 10px #fff,
     0 0 20px var(--neo-magenta),
     0 0 40px var(--neo-magenta),
     0 0 80px var(--neo-magenta);
-  font-size: 2rem;
+  font-size: clamp(1rem, 4vw, 2rem);
   line-height: 1.5;
   margin-bottom: 10px;
+}
+
+.neon-text.cyan {
+  text-shadow:
+    0 0 5px #fff,
+    0 0 10px var(--neo-cyan),
+    0 0 20px var(--neo-cyan);
+}
+
+.neon-text.magenta {
+  text-shadow:
+    0 0 5px #fff,
+    0 0 10px var(--neo-magenta),
+    0 0 20px var(--neo-magenta);
+}
+
+.neon-text.pink {
+  color: var(--neo-magenta);
 }
 
 .sub-text {
   color: var(--neo-cyan);
   font-weight: 900;
-  letter-spacing: 5px;
-  font-size: 1.2rem;
+  letter-spacing: 3px;
+  font-size: clamp(0.6rem, 2.5vw, 1.2rem);
   text-transform: uppercase;
   text-shadow: 0 0 10px var(--neo-cyan);
 }
@@ -107,17 +111,23 @@ body {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(0, 255, 255, 0.3);
-  padding: 2.5rem;
+  padding: clamp(1rem, 4vw, 2.5rem);
   border-radius: 20px;
   width: 100%;
   max-width: 500px;
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37),
               0 0 20px rgba(0, 255, 255, 0.2);
   z-index: 10;
+  position: relative;
+}
+
+/* Game card is wider */
+.glass-card.game-card {
+  max-width: 860px;
 }
 
 .score-board {
-  font-size: 1.1rem;
+  font-size: clamp(0.8rem, 2vw, 1.1rem);
   margin-bottom: 2rem;
   color: #ccc;
   font-weight: 700;
@@ -130,11 +140,11 @@ body {
 }
 
 .song-info {
-  margin-bottom: 2.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .song-title {
-  font-size: 2rem;
+  font-size: clamp(1rem, 3.5vw, 2rem);
   font-weight: 900;
   color: var(--neo-yellow);
   text-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
@@ -143,7 +153,7 @@ body {
 }
 
 .song-artist {
-  font-size: 1.2rem;
+  font-size: clamp(0.9rem, 2.5vw, 1.2rem);
   color: #ddd;
   font-style: italic;
 }
@@ -151,21 +161,35 @@ body {
 .guess-form {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
+}
+
+.guess-form.inline {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
 }
 
 .neon-input {
   background: rgba(0, 0, 0, 0.6);
   border: 2px solid var(--neo-magenta);
-  padding: 1rem;
+  padding: 0.75rem 1rem;
   border-radius: 10px;
   color: white;
-  font-size: 1.5rem;
+  font-size: clamp(1rem, 3vw, 1.5rem);
   text-align: center;
   font-family: 'Orbitron', sans-serif;
   outline: none;
   transition: all 0.3s ease;
   box-shadow: inset 0 0 10px rgba(255, 0, 255, 0.2);
+  width: 100%;
+}
+
+.neon-input.year-input {
+  width: 140px;
+  flex-shrink: 0;
 }
 
 .neon-input:focus {
@@ -188,8 +212,8 @@ input[type=number] {
   color: #fff;
   font-family: 'Orbitron', sans-serif;
   font-weight: bold;
-  font-size: 1.2rem;
-  padding: 1rem 2rem;
+  font-size: clamp(0.8rem, 2.5vw, 1.2rem);
+  padding: 0.75rem 1.5rem;
   border: 2px solid var(--neo-cyan);
   border-radius: 5px;
   cursor: pointer;
@@ -198,6 +222,7 @@ input[type=number] {
   box-shadow: 0 0 15px rgba(0, 255, 255, 0.3), inset 0 0 15px rgba(0, 255, 255, 0.1);
   text-shadow: 0 0 5px #fff;
   letter-spacing: 2px;
+  white-space: nowrap;
 }
 
 .neon-btn:hover:not(:disabled) {
@@ -214,12 +239,16 @@ input[type=number] {
   box-shadow: none;
 }
 
+.neon-btn.full-width {
+  width: 100%;
+}
+
 .feedback-message {
-  margin-top: 1.5rem;
-  padding: 1rem;
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
   border-radius: 8px;
   font-weight: bold;
-  font-size: 1.2rem;
+  font-size: clamp(0.85rem, 2.5vw, 1.2rem);
   animation: popIn 0.3s ease-out forwards;
 }
 
@@ -240,17 +269,101 @@ input[type=number] {
   animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
 }
 
-.neon-text.pink {
-  color: var(--neo-magenta);
-}
-
 .score-text {
-  font-size: 1.8rem;
+  font-size: clamp(1.2rem, 3vw, 1.8rem);
   margin: 2rem 0;
   text-shadow: 0 0 5px #fff;
 }
 
-/* Animations */
+/* ── Game Layout ── */
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid gray;
+  padding-bottom: 0.75rem;
+}
+
+.game-body {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.game-main {
+  flex: 2;
+  min-width: 0;
+}
+
+.game-sidebar {
+  flex: 1;
+  border-left: 1px solid gray;
+  padding-left: 1.25rem;
+  max-height: 500px;
+  overflow-y: auto;
+  min-width: 130px;
+}
+
+@media (max-width: 600px) {
+  .game-body {
+    flex-direction: column;
+  }
+
+  .game-sidebar {
+    border-left: none;
+    border-top: 1px solid gray;
+    padding-left: 0;
+    padding-top: 1rem;
+    max-height: 200px;
+  }
+}
+
+/* ── Lobby ── */
+.lobby-card {
+  max-width: 420px;
+  margin: auto;
+  margin-top: clamp(2rem, 8vh, 10vh);
+}
+
+.logout-btn {
+  background: transparent;
+  border: 1px solid gray;
+  color: gray;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.75rem;
+}
+
+.logout-btn:hover {
+  border-color: #fff;
+  color: #fff;
+}
+
+.lobby-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.player-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.player-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+/* ── Animations ── */
 @keyframes popIn {
   0% { transform: scale(0.8); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }
@@ -270,4 +383,11 @@ input[type=number] {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+.loading {
+  color: white;
+  text-align: center;
+  margin-top: 20vh;
+  font-family: 'Orbitron', sans-serif;
 }

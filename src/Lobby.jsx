@@ -26,7 +26,7 @@ export default function Lobby({ user, onRoomJoined }) {
         { code, host_id: user.id, status: 'playing' }
       ]);
       if (dbError) throw dbError;
-      onRoomJoined(code, true); // true = isHost
+      onRoomJoined(code, true);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -45,7 +45,6 @@ export default function Lobby({ user, onRoomJoined }) {
         .select('*')
         .eq('code', roomCode.toUpperCase())
         .single();
-        
       if (dbError || !data) throw new Error('Room not found or invalid.');
       onRoomJoined(data.code, data.host_id === user.id);
     } catch (err) {
@@ -61,25 +60,34 @@ export default function Lobby({ user, onRoomJoined }) {
   };
 
   return (
-    <div className="glass-card fade-in" style={{ maxWidth: '400px', margin: 'auto', marginTop: '10vh', textAlign: 'center' }}>
-      <button onClick={handleLogout} style={{ position: 'absolute', top: '15px', right: '15px', background: 'transparent', border: '1px solid gray', color: 'gray', padding: '5px 10px', borderRadius: '5px', cursor: 'pointer' }}>
-        Logout
-      </button>
+    <div className="glass-card lobby-card fade-in">
+      <div className="lobby-header">
+        <h2 className="neon-text cyan" style={{ fontSize: 'clamp(0.75rem, 3vw, 1.1rem)', marginBottom: 0 }}>
+          GUESS THE YEAR
+        </h2>
+        <button className="logout-btn" onClick={handleLogout}>Logout</button>
+      </div>
 
       {profile && (
-        <div style={{ marginBottom: '2rem' }}>
-          <img src={profile.avatar_url} alt="avatar" style={{ width: '80px', borderRadius: '50%', marginBottom: '10px' }} />
-          <h3 className="neon-text cyan" style={{ fontSize: '1.2rem' }}>WELCOME, {profile.full_name?.toUpperCase() || 'PLAYER'}</h3>
+        <div style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
+          <img
+            src={profile.avatar_url}
+            alt="avatar"
+            style={{ width: '70px', height: '70px', borderRadius: '50%', marginBottom: '10px', objectFit: 'cover' }}
+          />
+          <h3 className="neon-text cyan" style={{ fontSize: 'clamp(0.7rem, 2.5vw, 1rem)' }}>
+            WELCOME, {profile.full_name?.toUpperCase() || 'PLAYER'}
+          </h3>
         </div>
       )}
 
-      <div style={{ padding: '1rem', borderTop: '1px solid rgba(0, 255, 255, 0.3)', marginTop: '20px' }}>
-        <button className="neon-btn" style={{ width: '100%' }} onClick={handleCreateRoom} disabled={loading}>
+      <div style={{ borderTop: '1px solid rgba(0, 255, 255, 0.3)', paddingTop: '1.25rem', marginTop: '0.5rem' }}>
+        <button className="neon-btn full-width" onClick={handleCreateRoom} disabled={loading}>
           {loading ? 'WAIT...' : 'CREATE NEW HOST ROOM'}
         </button>
       </div>
 
-      <div style={{ margin: '2rem 0', color: '#ff00ff', fontWeight: 'bold' }}>--- OR ---</div>
+      <div style={{ margin: '1.5rem 0', color: '#ff00ff', fontWeight: 'bold' }}>--- OR ---</div>
 
       <form onSubmit={handleJoinRoom} className="guess-form">
         <input
@@ -91,10 +99,15 @@ export default function Lobby({ user, onRoomJoined }) {
           maxLength={6}
           style={{ textTransform: 'uppercase' }}
         />
-        <button type="submit" className="neon-btn" style={{ color: '#neo-yellow', borderColor: '#ffff00' }} disabled={loading || !roomCode}>
+        <button
+          type="submit"
+          className="neon-btn"
+          style={{ borderColor: '#ffff00', color: '#ffff00' }}
+          disabled={loading || !roomCode}
+        >
           JOIN ROOM
         </button>
-        {error && <div className="feedback-message wrong" style={{ fontSize: '1rem' }}>{error}</div>}
+        {error && <div className="feedback-message wrong">{error}</div>}
       </form>
     </div>
   );

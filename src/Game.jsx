@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
 
-// Helper to load songs
 const songs = [
   { title: "Another One Bites the Dust", artist: "Queen", year: 1980, youtubeId: "rY0WxgPXvzc" },
   { title: "Don't You Want Me", artist: "The Human League", year: 1981, youtubeId: "uPudE8nDog0" },
@@ -29,23 +28,18 @@ export default function Game({ user, roomCode, isHost }) {
   const [channel, setChannel] = useState(null);
   const [players, setPlayers] = useState({});
   const [currentQuestion, setCurrentQuestion] = useState(null);
+  const [score, setScore] = useState(0);
+  const [guess, setGuess] = useState('');
+  const [feedback, setFeedback] = useState(null);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [hostSongs, setHostSongs] = useState([]);
+  const [questionIndex, setQuestionIndex] = useState(-1);
 
   useEffect(() => {
     supabase.from('profiles').select('*').eq('id', user.id).single()
       .then(({ data }) => setProfile(data));
   }, [user.id]);
-  
-  // Local Player State
-  const [score, setScore] = useState(0);
-  const [guess, setGuess] = useState("");
-  const [feedback, setFeedback] = useState(null);
-  const [elapsedTime, setElapsedTime] = useState(0);
 
-  // Host State
-  const [hostSongs, setHostSongs] = useState([]);
-  const [questionIndex, setQuestionIndex] = useState(-1);
-
-  // Init Realtime
   useEffect(() => {
     const ch = supabase.channel(`room:${roomCode}`, {
       config: { presence: { key: user.id } }
@@ -53,16 +47,11 @@ export default function Game({ user, roomCode, isHost }) {
 
     ch.on('presence', { event: 'sync' }, () => {
       const state = ch.presenceState();
-      // limit visual list to 10 players
       const onlinePlayers = {};
       Object.keys(state).forEach(key => {
-        onlinePlayers[key] = {
-          info: state[key][0],
-          score: 0 // Default, gets overwritten by broadcasts
-        };
+        onlinePlayers[key] = { info: state[key][0], score: 0 };
       });
       setPlayers(prev => {
-        // preserve scores
         for (let k in onlinePlayers) {
           if (prev[k]) onlinePlayers[k].score = prev[k].score;
         }
@@ -81,7 +70,7 @@ export default function Game({ user, roomCode, isHost }) {
     ch.on('broadcast', { event: 'new_question' }, (payload) => {
       setCurrentQuestion(payload.payload.song);
       setFeedback(null);
-      setGuess("");
+      setGuess('');
       setElapsedTime(0);
     });
 
@@ -96,18 +85,14 @@ export default function Game({ user, roomCode, isHost }) {
     return () => { ch.unsubscribe(); };
   }, [roomCode, user.id, profile]);
 
-  // Timer logic
   useEffect(() => {
     let timer;
     if (currentQuestion && feedback === null) {
-      timer = setInterval(() => {
-        setElapsedTime(prev => prev + 1);
-      }, 1000);
+      timer = setInterval(() => setElapsedTime(prev => prev + 1), 1000);
     }
     return () => clearInterval(timer);
   }, [currentQuestion, feedback]);
 
-  // Host controls
   const handleHostNextQuestion = () => {
     let list = hostSongs;
     if (list.length === 0) {
@@ -116,17 +101,14 @@ export default function Game({ user, roomCode, isHost }) {
     }
     const nextIdx = questionIndex + 1;
     setQuestionIndex(nextIdx);
-    
+
     if (nextIdx < list.length) {
       const song = list[nextIdx];
       channel.send({ type: 'broadcast', event: 'new_question', payload: { song } });
-      // Host doesn't receive their own broadcast, so set locally too
       setCurrentQuestion(song);
       setFeedback(null);
-      setGuess("");
+      setGuess('');
       setElapsedTime(0);
-    } else {
-      // Game over logic (just local for simplicity)
     }
   };
 
@@ -136,7 +118,7 @@ export default function Game({ user, roomCode, isHost }) {
 
     const guessedYear = parseInt(guess);
     let isCorrect = false;
-    let message = "";
+    let message = '';
 
     if (guessedYear === currentQuestion.year) {
       isCorrect = true;
@@ -144,7 +126,6 @@ export default function Game({ user, roomCode, isHost }) {
       setScore(s => {
         const newer = s + 1;
         channel.send({ type: 'broadcast', event: 'score_update', payload: { userId: user.id, newScore: newer } });
-        // Sender doesn't receive own broadcast, so update locally too
         setPlayers(prev => ({
           ...prev,
           [user.id]: { ...prev[user.id], score: newer }
@@ -161,37 +142,42 @@ export default function Game({ user, roomCode, isHost }) {
   if (!channel) return <div className="loading">Connecting to Room...</div>;
 
   return (
-    <div className="glass-card fade-in" style={{ maxWidth: '800px', margin: 'auto', marginTop: '5vh' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', borderBottom: '1px solid gray', paddingBottom: '10px' }}>
+    <div className="glass-card game-card fade-in" style={{ margin: 'auto', marginTop: 'clamp(1rem, 4vh, 3rem)', marginBottom: '1rem' }}>
+      {/* Header */}
+      <div className="game-header">
         <div>
-          <h2 className="neon-text cyan">ROOM: {roomCode}</h2>
-          <p>Online Players (Max 10): {Object.keys(players).length}</p>
+          <h2 className="neon-text cyan" style={{ fontSize: 'clamp(0.75rem, 3vw, 1.2rem)', marginBottom: '4px' }}>
+            ROOM: {roomCode}
+          </h2>
+          <p style={{ color: '#aaa', fontSize: 'clamp(0.7rem, 2vw, 0.9rem)' }}>
+            Players: {Object.keys(players).length}/10
+          </p>
         </div>
-        {isHost && (
-          <div>
-            <button className="neon-btn" style={{ padding: '0.5rem 1rem' }} onClick={handleHostNextQuestion}>
-              {questionIndex === -1 ? 'START GAME' : 'NEXT SONG'}
-            </button>
-          </div>
+        {isHost && currentQuestion && (
+          <button className="neon-btn" style={{ padding: '0.5rem 1rem', fontSize: 'clamp(0.65rem, 2vw, 0.9rem)' }} onClick={handleHostNextQuestion}>
+            NEXT SONG
+          </button>
         )}
       </div>
 
-      <div style={{ display: 'flex', gap: '2rem' }}>
-        {/* Main Game Screen */}
-        <div style={{ flex: 2 }}>
+      {/* Body */}
+      <div className="game-body">
+        {/* Main game area */}
+        <div className="game-main">
           {currentQuestion ? (
-            <div className="question-card fade-in">
-              <div className="video-container" style={{ marginBottom: '1.5rem', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 0 15px rgba(0, 255, 255, 0.3)' }}>
-                <iframe 
+            <div className="fade-in">
+              <div style={{ marginBottom: '1.25rem', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 0 15px rgba(0, 255, 255, 0.3)', aspectRatio: '16/9' }}>
+                <iframe
                   key={currentQuestion.youtubeId}
-                  width="100%" 
-                  height="220" 
-                  src={`https://www.youtube.com/embed/${currentQuestion.youtubeId}?autoplay=1&mute=0&controls=0&disablekb=1&showinfo=0`} 
-                  title="YouTube video player" 
-                  frameBorder="0" 
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                  allowFullScreen>
-                </iframe>
+                  width="100%"
+                  height="100%"
+                  src={`https://www.youtube.com/embed/${currentQuestion.youtubeId}?autoplay=1&mute=0&controls=0&disablekb=1&showinfo=0`}
+                  title="YouTube video player"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  style={{ display: 'block' }}
+                />
               </div>
 
               <div className="song-info">
@@ -199,19 +185,18 @@ export default function Game({ user, roomCode, isHost }) {
                 <h3 className="song-artist">by {currentQuestion.artist}</h3>
               </div>
 
-              <form onSubmit={handleGuess} className="guess-form" style={{ flexDirection: 'row', gap: '10px', alignItems: 'center', justifyContent: 'center' }}>
-                <input 
-                  type="number" 
-                  min="1980" max="1989" 
-                  placeholder="Year" 
+              <form onSubmit={handleGuess} className="guess-form inline">
+                <input
+                  type="number"
+                  min="1980" max="1989"
+                  placeholder="Year"
                   value={guess}
                   onChange={(e) => setGuess(e.target.value)}
-                  className="neon-input"
-                  style={{ width: '150px' }}
+                  className="neon-input year-input"
                   disabled={feedback !== null}
                 />
-                <span className="neon-text pink" style={{ fontSize: '1.2rem', margin: '0 10px' }}>{elapsedTime}s</span>
-                <button type="submit" className="neon-btn submit-btn" disabled={feedback !== null || !guess}>
+                <span className="neon-text pink" style={{ fontSize: '1.1rem', margin: '0 6px' }}>{elapsedTime}s</span>
+                <button type="submit" className="neon-btn" disabled={feedback !== null || !guess}>
                   GUESS
                 </button>
               </form>
@@ -223,33 +208,44 @@ export default function Game({ user, roomCode, isHost }) {
               )}
             </div>
           ) : (
-            <div style={{ padding: '3rem', textAlign: 'center', color: '#ccc' }}>
+            <div style={{ padding: '2rem 1rem', textAlign: 'center', color: '#ccc' }}>
               {isHost ? (
                 <>
-                  <h3 style={{ marginBottom: '1.5rem' }}>Ready when you are!</h3>
-                  <button className="neon-btn" style={{ fontSize: '1.4rem', padding: '1rem 2.5rem' }} onClick={handleHostNextQuestion}>
+                  <h3 style={{ marginBottom: '1.5rem', fontSize: 'clamp(0.85rem, 2.5vw, 1.1rem)' }}>Ready when you are!</h3>
+                  <button className="neon-btn" style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1.4rem)', padding: '1rem 2.5rem' }} onClick={handleHostNextQuestion}>
                     START GAME
                   </button>
                 </>
               ) : (
-                <h3>Waiting for Host to start...</h3>
+                <h3 style={{ fontSize: 'clamp(0.85rem, 2.5vw, 1.1rem)' }}>Waiting for Host to start...</h3>
               )}
             </div>
           )}
         </div>
 
-        {/* Players Sidebar */}
-        <div style={{ flex: 1, borderLeft: '1px solid gray', paddingLeft: '20px', maxHeight: '500px', overflowY: 'auto' }}>
-          <h3 className="neon-text magenta" style={{ fontSize: '1rem' }}>LEADERBOARD</h3>
-          {Object.entries(players).map(([playerId, p]) => (
-            <div key={playerId} style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '15px 0' }}>
-              <img src={p.info.avatar} alt="avatar" style={{ width: '40px', borderRadius: '50%', border: playerId === user.id ? '2px solid lime' : '1px solid gray' }} />
-              <div>
-                <div style={{ fontWeight: 'bold' }}>{p.info.name} {isHost && playerId === user.id ? '(Host)' : ''}</div>
-                <div className="neon-text cyan" style={{ fontSize: '0.8rem' }}>Score: {p.score || 0}</div>
+        {/* Leaderboard sidebar */}
+        <div className="game-sidebar">
+          <h3 className="neon-text magenta" style={{ fontSize: 'clamp(0.65rem, 2vw, 1rem)', marginBottom: '0.5rem' }}>LEADERBOARD</h3>
+          {Object.entries(players)
+            .sort(([, a], [, b]) => (b.score || 0) - (a.score || 0))
+            .map(([playerId, p]) => (
+              <div key={playerId} className="player-row">
+                <img
+                  src={p.info?.avatar}
+                  alt="avatar"
+                  className="player-avatar"
+                  style={{ border: playerId === user.id ? '2px solid lime' : '1px solid gray' }}
+                />
+                <div style={{ textAlign: 'left', minWidth: 0 }}>
+                  <div style={{ fontWeight: 'bold', fontSize: 'clamp(0.65rem, 2vw, 0.85rem)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {p.info?.name} {isHost && playerId === user.id ? '👑' : ''}
+                  </div>
+                  <div className="neon-text cyan" style={{ fontSize: '0.75rem' }}>
+                    Score: {p.score || 0}
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
         </div>
       </div>
     </div>

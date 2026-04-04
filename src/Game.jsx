@@ -119,8 +119,12 @@ export default function Game({ user, roomCode, isHost }) {
     
     if (nextIdx < list.length) {
       const song = list[nextIdx];
-      // broadcast
       channel.send({ type: 'broadcast', event: 'new_question', payload: { song } });
+      // Host doesn't receive their own broadcast, so set locally too
+      setCurrentQuestion(song);
+      setFeedback(null);
+      setGuess("");
+      setElapsedTime(0);
     } else {
       // Game over logic (just local for simplicity)
     }

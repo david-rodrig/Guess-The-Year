@@ -398,6 +398,10 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
         {/* Full leaderboard overlay after reveal */}
         {showLeaderboard && (
           <div className="leaderboard-overlay fade-in">
+            <button
+              onClick={() => setShowLeaderboard(false)}
+              style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'transparent', border: '1px solid #555', color: '#aaa', borderRadius: '6px', padding: '4px 10px', cursor: 'pointer', fontSize: '1rem', lineHeight: 1 }}
+            >✕</button>
             {currentQuestion && (
               <div style={{ textAlign: 'center', marginBottom: '1.25rem', padding: '0.75rem', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(0,255,255,0.2)' }}>
                 <p style={{ color: '#aaa', fontSize: 'clamp(0.6rem, 1.5vw, 0.75rem)', letterSpacing: '2px', marginBottom: '0.3rem' }}>THE ANSWER WAS</p>

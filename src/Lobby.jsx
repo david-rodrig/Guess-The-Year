@@ -15,7 +15,7 @@ export default function Lobby({ user, onRoomJoined }) {
     loadProfile();
   }, [user]);
 
-  const generateCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
+  const generateCode = () => String(Math.floor(1000 + Math.random() * 9000));
 
   const handleCreateRoom = async () => {
     setError(null);
@@ -43,7 +43,7 @@ export default function Lobby({ user, onRoomJoined }) {
       const { data, error: dbError } = await supabase
         .from('rooms')
         .select('*')
-        .eq('code', roomCode.toUpperCase())
+        .eq('code', roomCode)
         .single();
       if (dbError || !data) throw new Error('Room not found or invalid.');
       onRoomJoined(data.code, data.host_id === user.id);
@@ -96,8 +96,8 @@ export default function Lobby({ user, onRoomJoined }) {
           value={roomCode}
           onChange={(e) => setRoomCode(e.target.value)}
           className="neon-input"
-          maxLength={6}
-          style={{ textTransform: 'uppercase' }}
+          maxLength={4}
+          type="number"
         />
         <button
           type="submit"

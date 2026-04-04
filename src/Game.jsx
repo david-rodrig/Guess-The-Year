@@ -144,8 +144,11 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
       setFeedback({ message, isCorrect, points });
     }
 
-    // Show full leaderboard 1s after reveal
-    setTimeout(() => setShowLeaderboard(true), 1000);
+    // Show full leaderboard 1s after reveal and stop music
+    setTimeout(() => {
+      setShowLeaderboard(true);
+      ytPlayerRef.current?.stopVideo();
+    }, 1000);
   }, [user.id]);
 
   // Check if all players have submitted → reveal

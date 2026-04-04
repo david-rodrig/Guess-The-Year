@@ -43,7 +43,12 @@ export default function App() {
         ) : !room ? (
           <Lobby user={session.user} onRoomJoined={(code, isHost) => setRoom({ code, isHost })} />
         ) : (
-          <Game user={session.user} roomCode={room.code} isHost={room.isHost} />
+          <Game
+            user={session.user}
+            roomCode={room.code}
+            isHost={room.isHost}
+            onLeave={async () => { await supabase.auth.signOut(); setSession(null); setRoom(null); }}
+          />
         )}
       </main>
     </div>

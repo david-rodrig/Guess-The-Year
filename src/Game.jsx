@@ -23,7 +23,7 @@ function shuffleArray(array) {
   return array.sort(() => Math.random() - 0.5);
 }
 
-export default function Game({ user, roomCode, isHost }) {
+export default function Game({ user, roomCode, isHost, onLeave }) {
   const [profile, setProfile] = useState(null);
   const [channel, setChannel] = useState(null);
   const [players, setPlayers] = useState({});
@@ -153,6 +153,7 @@ export default function Game({ user, roomCode, isHost }) {
             Players: {Object.keys(players).length}/10
           </p>
         </div>
+        <button className="logout-btn" onClick={onLeave}>Leave</button>
         {isHost && currentQuestion && (
           <button className="neon-btn" style={{ padding: '0.5rem 1rem', fontSize: 'clamp(0.65rem, 2vw, 0.9rem)' }} onClick={handleHostNextQuestion}>
             NEXT SONG

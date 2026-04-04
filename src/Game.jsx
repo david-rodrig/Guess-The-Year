@@ -80,6 +80,7 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
   const [questionIndex, setQuestionIndex] = useState(-1);
   const [guessedCount, setGuessedCount] = useState(0);        // how many players have submitted
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [roundNumber, setRoundNumber] = useState(0);
 
   // Refs for use inside callbacks / YT event handlers
   const ytPlayerRef = useRef(null);
@@ -211,6 +212,7 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
     });
 
     ch.on('broadcast', { event: 'new_question' }, ({ payload }) => {
+      if (payload.round) setRoundNumber(payload.round);
       resetQuestion(payload.song);
     });
 
@@ -273,7 +275,9 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
 
     if (nextIdx < list.length) {
       const song = list[nextIdx];
-      channel.send({ type: 'broadcast', event: 'new_question', payload: { song } });
+      const round = nextIdx + 1;
+      channel.send({ type: 'broadcast', event: 'new_question', payload: { song, round } });
+      setRoundNumber(round);
       resetQuestion(song);
     }
   };
@@ -413,7 +417,7 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
               LEADERBOARD
             </h2>
             <p style={{ color: '#aaa', fontSize: 'clamp(0.6rem, 1.5vw, 0.75rem)', letterSpacing: '2px', marginBottom: '1.25rem' }}>
-              ROUND {questionIndex + 1}
+              ROUND {roundNumber}
             </p>
             {Object.entries(players)
               .sort(([, a], [, b]) => (b.score || 0) - (a.score || 0))

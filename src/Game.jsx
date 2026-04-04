@@ -409,9 +409,12 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
                 <p style={{ color: '#ccc', fontSize: 'clamp(0.7rem, 2vw, 0.9rem)', marginTop: '0.3rem' }}>"{currentQuestion.title}" — {currentQuestion.artist}</p>
               </div>
             )}
-            <h2 className="neon-text cyan" style={{ fontSize: 'clamp(0.9rem, 3vw, 1.3rem)', marginBottom: '1.25rem' }}>
+            <h2 className="neon-text cyan" style={{ fontSize: 'clamp(0.9rem, 3vw, 1.3rem)', marginBottom: '0.25rem' }}>
               LEADERBOARD
             </h2>
+            <p style={{ color: '#aaa', fontSize: 'clamp(0.6rem, 1.5vw, 0.75rem)', letterSpacing: '2px', marginBottom: '1.25rem' }}>
+              ROUND {questionIndex + 1}
+            </p>
             {Object.entries(players)
               .sort(([, a], [, b]) => (b.score || 0) - (a.score || 0))
               .map(([playerId, p], i) => (

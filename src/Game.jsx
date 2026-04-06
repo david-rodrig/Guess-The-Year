@@ -366,7 +366,7 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
   const [guess, setGuess] = useState('');
   const [submittedGuess, setSubmittedGuess] = useState(null); // stored after submit, shown only at reveal
   const [feedback, setFeedback] = useState(null);             // set at reveal time
-  const [elapsedTime, setElapsedTime] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(30);
   const [hostSongs, setHostSongs] = useState([]);
   const [questionIndex, setQuestionIndex] = useState(-1);
   const [guessedCount, setGuessedCount] = useState(0);        // how many players have submitted
@@ -529,14 +529,21 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
     return () => { ch.unsubscribe(); channelRef.current = null; };
   }, [roomCode, user.id, profile, checkAllGuessed]);
 
-  // Timer — stops when feedback is shown (revealed)
+  // Countdown timer — 30s, triggers reveal at 0
   useEffect(() => {
-    let timer;
-    if (currentQuestion && feedback === null) {
-      timer = setInterval(() => setElapsedTime(prev => prev + 1), 1000);
-    }
+    if (!currentQuestion || feedback !== null) return;
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          revealAnswer();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
     return () => clearInterval(timer);
-  }, [currentQuestion, feedback]);
+  }, [currentQuestion, feedback, revealAnswer]);
 
   // ── Helpers ────────────────────────────────────────────────────
   const resetQuestion = (song) => {
@@ -547,7 +554,7 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
     setFeedback(null);
     setSubmittedGuess(null);
     setGuess('');
-    setElapsedTime(0);
+    setTimeLeft(30);
     setGuessedCount(0);
     setShowLeaderboard(false);
   };
@@ -641,7 +648,7 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
                         onChange={(e) => setGuess(e.target.value)}
                         className="neon-input year-input"
                       />
-                      <span className="neon-text pink" style={{ fontSize: '1.1rem', margin: '0 6px' }}>{elapsedTime}s</span>
+                      <span className="neon-text" style={{ fontSize: '1.1rem', margin: '0 6px', color: timeLeft <= 10 ? '#ff4444' : '#ff00ff', textShadow: timeLeft <= 10 ? '0 0 10px #ff4444' : '0 0 10px #ff00ff' }}>{timeLeft}s</span>
                       <button type="submit" className="neon-btn" disabled={!guess}>
                         GUESS
                       </button>
@@ -653,6 +660,9 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
                       </p>
                       <p style={{ fontSize: 'clamp(0.65rem, 1.5vw, 0.8rem)', color: '#aaa', marginTop: '0.5rem' }}>
                         {guessedCount}/{playerCount} submitted
+                      </p>
+                      <p style={{ fontSize: 'clamp(0.75rem, 2vw, 1rem)', marginTop: '0.5rem', color: timeLeft <= 10 ? '#ff4444' : '#ff00ff', textShadow: timeLeft <= 10 ? '0 0 8px #ff4444' : '0 0 8px #ff00ff' }}>
+                        {timeLeft}s remaining
                       </p>
                     </div>
                   )}

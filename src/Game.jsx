@@ -353,11 +353,89 @@ const ALL_SONGS = [
   { title: "Not Like Us", artist: "Kendrick Lamar", year: 2024, youtubeId: "T6eK-2OQtew" }
 ];
 
+const HEBREW_SONGS = [
+  // ── 70s ──────────────────────────────────────────────────────────
+  { title: "לו יהי", artist: "נעמי שמר", year: 1973, youtubeId: "8R5hJnxsNa0" },
+  { title: "פרח גני", artist: "שלמה ארצי", year: 1976, youtubeId: "HX9_mxmjW3U" },
+  { title: "אוי לה", artist: "אריק איינשטיין", year: 1971, youtubeId: "kQWrpMIMq_Y" },
+  { title: "שיר אהבה ישן", artist: "אריק איינשטיין", year: 1972, youtubeId: "ZzJ6RFMh4YM" },
+  { title: "נסתלק לו", artist: "שלום חנוך", year: 1973, youtubeId: "3pqMPmyHabY" },
+  { title: "עיניים שחורות", artist: "יהורם גאון", year: 1972, youtubeId: "2hxIiRhiubk" },
+  { title: "שיקסה", artist: "שלום חנוך", year: 1977, youtubeId: "U0rkVxEFvVE" },
+  { title: "אלוהים", artist: "אריק איינשטיין", year: 1974, youtubeId: "bqIMYeaKMIs" },
+  { title: "לאט לאט", artist: "אריק איינשטיין", year: 1976, youtubeId: "gFrFqMnRq0c" },
+  { title: "דרך ארץ", artist: "שלמה ארצי", year: 1977, youtubeId: "IKTUvgDPMJQ" },
+
+  // ── 80s ──────────────────────────────────────────────────────────
+  { title: "חלומות", artist: "ריטה", year: 1986, youtubeId: "UwE1O7IrAow" },
+  { title: "יונה", artist: "ריטה", year: 1987, youtubeId: "OJrOmEAZqN8" },
+  { title: "שיר השכחה", artist: "ריטה", year: 1987, youtubeId: "q3v6r9-hRNs" },
+  { title: "Im Nin'alu", artist: "עפרה חזה", year: 1984, youtubeId: "5K5sHu7OqPE" },
+  { title: "יה רבון", artist: "עפרה חזה", year: 1985, youtubeId: "KvEOPBO90Zw" },
+  { title: "ציפור נודדת", artist: "שלמה ארצי", year: 1983, youtubeId: "aXF7mVpEO2M" },
+  { title: "ימים כתיקנם", artist: "אריק איינשטיין", year: 1985, youtubeId: "jP8qiMWHGkM" },
+  { title: "מי ממך", artist: "שלמה ארצי", year: 1985, youtubeId: "GhU9l7e_EqA" },
+  { title: "רשות", artist: "שלמה ארצי", year: 1987, youtubeId: "N9wSbOPQ8Js" },
+  { title: "הכל יהיה בסדר", artist: "מירי אלוני", year: 1982, youtubeId: "3u9b2WqVavk" },
+
+  // ── 90s ──────────────────────────────────────────────────────────
+  { title: "לאן", artist: "שלמה ארצי", year: 1991, youtubeId: "1X5oI7htZ6I" },
+  { title: "שניים", artist: "שלמה ארצי", year: 1991, youtubeId: "p2C4qnvf3MA" },
+  { title: "כאילו", artist: "ריטה", year: 1992, youtubeId: "gSmN-PZLDoA" },
+  { title: "עטור מצחך", artist: "אביב גפן", year: 1994, youtubeId: "d3P-DQB5S8A" },
+  { title: "כנפיים", artist: "אביב גפן", year: 1996, youtubeId: "KY2N4-aHFgw" },
+  { title: "מה אעשה", artist: "שלמה ארצי", year: 1994, youtubeId: "J48gp3rYAtA" },
+  { title: "אני מאמין", artist: "שלמה ארצי", year: 1997, youtubeId: "hNAqQ9BRNPU" },
+  { title: "לא נגמר", artist: "אתניקס", year: 1997, youtubeId: "w3-QHXMTQ54" },
+  { title: "שיר לאהבה", artist: "אתניקס", year: 1995, youtubeId: "oLhj7Y8zz8A" },
+  { title: "תן לי", artist: "שרית חדד", year: 1998, youtubeId: "c4dY5OZGhXo" },
+
+  // ── 2000s ─────────────────────────────────────────────────────────
+  { title: "רק נשמה", artist: "שרית חדד", year: 2001, youtubeId: "GtWqCfBqPME" },
+  { title: "אש", artist: "שרית חדד", year: 2002, youtubeId: "2dGO82RYXOQ" },
+  { title: "לב אבן", artist: "אביתר בנאי", year: 2003, youtubeId: "4e3KjO9Kqe0" },
+  { title: "ים של דמעות", artist: "אביתר בנאי", year: 2005, youtubeId: "TiGaJEDgHNU" },
+  { title: "נסיכה", artist: "אייל גולן", year: 2002, youtubeId: "g1Ip3TkGjPU" },
+  { title: "תודה", artist: "אייל גולן", year: 2004, youtubeId: "1yEt2AV59tQ" },
+  { title: "בשבילך", artist: "אייל גולן", year: 2007, youtubeId: "ZhCLmgfSD_g" },
+  { title: "מה שאני מרגיש", artist: "עברי לידר", year: 2001, youtubeId: "BRKy-gP9H4w" },
+  { title: "הכל בגללך", artist: "עברי לידר", year: 2005, youtubeId: "m6PzO_ztC_g" },
+  { title: "לא אכפת לי", artist: "Static & Ben El", year: 2008, youtubeId: "a8FUf9OHWAM" },
+
+  // ── 2010s ─────────────────────────────────────────────────────────
+  { title: "טראמפלדור", artist: "Static & Ben El", year: 2016, youtubeId: "J7A8VLkXKCw" },
+  { title: "הגיע הזמן", artist: "Static & Ben El", year: 2015, youtubeId: "3BLa2Mme4kk" },
+  { title: "מלכה", artist: "Static & Ben El ft. עומר אדם", year: 2017, youtubeId: "FXi4ygBJOhI" },
+  { title: "אהבה של אמת", artist: "עומר אדם", year: 2015, youtubeId: "N7dWVBOgrSA" },
+  { title: "גשם בלילה", artist: "עומר אדם", year: 2016, youtubeId: "JQQ7MZSJBqg" },
+  { title: "פנינה", artist: "עידן רייכל", year: 2011, youtubeId: "gWFJGvhROWU" },
+  { title: "לב גדול", artist: "עידן רייכל", year: 2010, youtubeId: "u2kO5-XBNRQ" },
+  { title: "כמו שאני", artist: "נועה קירל", year: 2019, youtubeId: "A1w4Ip0RqTc" },
+  { title: "ואת", artist: "עומר אדם", year: 2018, youtubeId: "UtWBZMXBWJg" },
+  { title: "הצד השני של הים", artist: "עומר אדם ft. Static & Ben El", year: 2019, youtubeId: "0dXD1rXEhWA" },
+
+  // ── 2020s ─────────────────────────────────────────────────────────
+  { title: "שמש", artist: "עדן חסון", year: 2021, youtubeId: "pok8H_KF1FA" },
+  { title: "שובי", artist: "נועה קירל", year: 2020, youtubeId: "J89IiYAzHOQ" },
+  { title: "כוכב", artist: "נועה קירל", year: 2022, youtubeId: "mJe0vZDf_q8" },
+  { title: "הצד השני", artist: "Static & Ben El", year: 2020, youtubeId: "UrIVYoRdLm0" },
+  { title: "ריקוד", artist: "עומר אדם", year: 2021, youtubeId: "TuZGNOQCxhQ" },
+  { title: "חמאם חמאם", artist: "Static & Ben El ft. Lior Narkis", year: 2022, youtubeId: "q5t4MFwXU3Y" },
+  { title: "מה את עושה לי", artist: "עדן חסון", year: 2022, youtubeId: "E1k9MfZlhEw" },
+  { title: "מגיע לי", artist: "נועה קירל", year: 2023, youtubeId: "N4PW66_2RLo" },
+];
+
 function shuffleArray(array) {
   return array.sort(() => Math.random() - 0.5);
 }
 
-export default function Game({ user, roomCode, isHost, selectedDecades, onLeave }) {
+function getSongPool(musicType) {
+  if (musicType === 'hebrew') return HEBREW_SONGS;
+  if (musicType === 'mix') return [...ALL_SONGS, ...HEBREW_SONGS];
+  return ALL_SONGS;
+}
+
+export default function Game({ user, roomCode, isHost, selectedDecades, musicType, onLeave }) {
   const [profile, setProfile] = useState(null);
   const [channel, setChannel] = useState(null);
   const [players, setPlayers] = useState({});
@@ -572,7 +650,7 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
     if (list.length === 0) {
       const allowed = DECADES
         .filter(d => selectedDecades.includes(d.label))
-        .flatMap(d => ALL_SONGS.filter(s => s.year >= d.start && s.year <= d.end));
+        .flatMap(d => getSongPool(musicType).filter(s => s.year >= d.start && s.year <= d.end));
       list = shuffleArray([...allowed]).slice(0, 10);
       setHostSongs(list);
     }
@@ -586,6 +664,19 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
       setRoundNumber(round);
       resetQuestion(song);
     }
+  };
+
+  const handleNewRound = () => {
+    const allowed = DECADES
+      .filter(d => selectedDecades.includes(d.label))
+      .flatMap(d => getSongPool(musicType).filter(s => s.year >= d.start && s.year <= d.end));
+    const list = shuffleArray([...allowed]).slice(0, 10);
+    setHostSongs(list);
+    setQuestionIndex(0);
+    const song = list[0];
+    channel.send({ type: 'broadcast', event: 'new_question', payload: { song, round: 1 } });
+    setRoundNumber(1);
+    resetQuestion(song);
   };
 
   const handleGuess = (e) => {
@@ -770,9 +861,15 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
                 </div>
               ))}
             {isHost && (
-              <button className="neon-btn full-width" style={{ marginTop: '1.25rem' }} onClick={handleHostNextQuestion}>
-                NEXT SONG →
-              </button>
+              roundNumber >= 10 ? (
+                <button className="neon-btn full-width" style={{ marginTop: '1.25rem', borderColor: '#ff00ff', color: '#ff00ff' }} onClick={handleNewRound}>
+                  NEW ROUND →
+                </button>
+              ) : (
+                <button className="neon-btn full-width" style={{ marginTop: '1.25rem' }} onClick={handleHostNextQuestion}>
+                  NEXT SONG →
+                </button>
+              )
             )}
           </div>
         )}

@@ -45,7 +45,7 @@ export default function App() {
         ) : !room ? (
           <Lobby
             user={session.user}
-            onRoomJoined={(code, isHost, selectedDecades) => setRoom({ code, isHost, selectedDecades })}
+            onRoomJoined={(code, isHost, selectedDecades, musicType) => setRoom({ code, isHost, selectedDecades, musicType })}
           />
         ) : (
           <Game
@@ -53,6 +53,7 @@ export default function App() {
             roomCode={room.code}
             isHost={room.isHost}
             selectedDecades={room.selectedDecades}
+            musicType={room.musicType || 'international'}
             onLeave={async () => {
               await supabase.auth.signOut();
               setSession(null);

@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
 import DecadeSelect from './DecadeSelect';
+import MusicTypeSelect from './MusicTypeSelect';
 
 export default function Lobby({ user, onRoomJoined }) {
   const [roomCode, setRoomCode] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState(null);
+  const [pickingMusicType, setPickingMusicType] = useState(false);
+  const [musicType, setMusicType] = useState(null);
   const [pickingDecades, setPickingDecades] = useState(false);
 
   useEffect(() => {
@@ -28,7 +31,7 @@ export default function Lobby({ user, onRoomJoined }) {
         { code, host_id: user.id, status: 'playing' }
       ]);
       if (dbError) throw dbError;
-      onRoomJoined(code, true, selectedDecades);
+      onRoomJoined(code, true, selectedDecades, musicType);
     } catch (err) {
       setError(err.message);
       setPickingDecades(false);
@@ -62,12 +65,28 @@ export default function Lobby({ user, onRoomJoined }) {
     window.location.reload();
   };
 
-  // Show decade picker for host before creating room
+  // Step 1: pick music type
+  if (pickingMusicType) {
+    return (
+      <div style={{ width: '100%', maxWidth: '480px', margin: 'auto' }}>
+        <button
+          onClick={() => setPickingMusicType(false)}
+          className="logout-btn"
+          style={{ marginBottom: '1rem', display: 'block' }}
+        >
+          ← Back
+        </button>
+        <MusicTypeSelect onConfirm={(type) => { setMusicType(type); setPickingMusicType(false); setPickingDecades(true); }} />
+      </div>
+    );
+  }
+
+  // Step 2: pick decades
   if (pickingDecades) {
     return (
       <div style={{ width: '100%', maxWidth: '480px', margin: 'auto' }}>
         <button
-          onClick={() => setPickingDecades(false)}
+          onClick={() => { setPickingDecades(false); setPickingMusicType(true); }}
           className="logout-btn"
           style={{ marginBottom: '1rem', display: 'block' }}
         >
@@ -102,7 +121,7 @@ export default function Lobby({ user, onRoomJoined }) {
       )}
 
       <div style={{ borderTop: '1px solid rgba(0, 255, 255, 0.3)', paddingTop: '1.25rem', marginTop: '0.5rem' }}>
-        <button className="neon-btn full-width" onClick={() => setPickingDecades(true)} disabled={loading}>
+        <button className="neon-btn full-width" onClick={() => setPickingMusicType(true)} disabled={loading}>
           CREATE NEW HOST ROOM
         </button>
       </div>

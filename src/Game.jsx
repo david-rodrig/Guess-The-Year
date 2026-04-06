@@ -748,16 +748,22 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
                     <div style={{ fontWeight: 'bold', fontSize: 'clamp(0.75rem, 2vw, 0.95rem)' }}>
                       {p.info?.name}{playerId === user.id ? ' (you)' : ''}
                     </div>
-                    {p.lastGuess != null ? (
-                      <div style={{ fontSize: 'clamp(0.6rem, 1.5vw, 0.75rem)', color: p.lastGuess === currentQuestion?.year ? '#00ff88' : '#ff8844', marginTop: '2px' }}>
-                        guessed {p.lastGuess}
-                      </div>
-                    ) : (
-                      <div style={{ fontSize: 'clamp(0.6rem, 1.5vw, 0.75rem)', color: '#555', marginTop: '2px' }}>
-                        no guess
-                      </div>
-                    )}
                   </div>
+                  {p.lastGuess != null ? (
+                    <div style={{
+                      fontFamily: "'Press Start 2P', cursive",
+                      fontSize: 'clamp(0.7rem, 2vw, 0.9rem)',
+                      color: p.lastGuess === currentQuestion?.year ? '#00ff88' : '#ff8844',
+                      textShadow: p.lastGuess === currentQuestion?.year ? '0 0 8px #00ff88' : '0 0 8px #ff8844',
+                      minWidth: '3.5rem', textAlign: 'center',
+                    }}>
+                      {p.lastGuess}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: 'clamp(0.6rem, 1.5vw, 0.75rem)', color: '#444', minWidth: '3.5rem', textAlign: 'center' }}>
+                      —
+                    </div>
+                  )}
                   <div style={{ fontFamily: "'Press Start 2P', cursive", fontSize: 'clamp(0.8rem, 2.5vw, 1.1rem)', color: '#0ff', textShadow: '0 0 8px #0ff' }}>
                     {p.score || 0} pts
                   </div>

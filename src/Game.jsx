@@ -510,6 +510,9 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
     ch.on('broadcast', { event: 'player_guessed' }, ({ payload }) => {
       if (!guessedIdsRef.current.has(payload.userId)) {
         guessedIdsRef.current.add(payload.userId);
+        if (payload.year != null) {
+          setPlayers(prev => ({ ...prev, [payload.userId]: { ...prev[payload.userId], lastGuess: payload.year } }));
+        }
         setGuessedCount(prev => {
           const next = prev + 1;
           checkAllGuessed(next);
@@ -550,6 +553,11 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
     revealedRef.current = false;
     submittedGuessRef.current = null;
     guessedIdsRef.current = new Set();
+    setPlayers(prev => {
+      const cleared = {};
+      for (const k in prev) cleared[k] = { ...prev[k], lastGuess: null };
+      return cleared;
+    });
     setCurrentQuestion(song);
     setFeedback(null);
     setSubmittedGuess(null);
@@ -589,9 +597,11 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
     setSubmittedGuess(guessedYear);
 
     // Broadcast that this player submitted (not the guess value)
-    channel.send({ type: 'broadcast', event: 'player_guessed', payload: { userId: user.id } });
+    channel.send({ type: 'broadcast', event: 'player_guessed', payload: { userId: user.id, year: guessedYear } });
 
-    // Count self (own broadcast not received)
+    // Store own guess locally (own broadcast not received)
+    setPlayers(prev => ({ ...prev, [user.id]: { ...prev[user.id], lastGuess: guessedYear } }));
+
     guessedIdsRef.current.add(user.id);
     const next = guessedIdsRef.current.size;
     setGuessedCount(next);
@@ -738,6 +748,15 @@ export default function Game({ user, roomCode, isHost, selectedDecades, onLeave 
                     <div style={{ fontWeight: 'bold', fontSize: 'clamp(0.75rem, 2vw, 0.95rem)' }}>
                       {p.info?.name}{playerId === user.id ? ' (you)' : ''}
                     </div>
+                    {p.lastGuess != null ? (
+                      <div style={{ fontSize: 'clamp(0.6rem, 1.5vw, 0.75rem)', color: p.lastGuess === currentQuestion?.year ? '#00ff88' : '#ff8844', marginTop: '2px' }}>
+                        guessed {p.lastGuess}
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: 'clamp(0.6rem, 1.5vw, 0.75rem)', color: '#555', marginTop: '2px' }}>
+                        no guess
+                      </div>
+                    )}
                   </div>
                   <div style={{ fontFamily: "'Press Start 2P', cursive", fontSize: 'clamp(0.8rem, 2.5vw, 1.1rem)', color: '#0ff', textShadow: '0 0 8px #0ff' }}>
                     {p.score || 0} pts

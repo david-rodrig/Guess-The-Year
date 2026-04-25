@@ -1,14 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from './lib/supabase';
 import Auth from './Auth';
 import Lobby from './Lobby';
 import Game from './Game';
 import './index.css';
 
+const HEARTBEAT_MS = 5 * 60 * 1000; // 5 minutes
+
 export default function App() {
   const [session, setSession] = useState(null);
   const [room, setRoom] = useState(null); // { code, isHost, selectedDecades }
   const [loading, setLoading] = useState(true);
+  const heartbeatRef = useRef(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -18,11 +21,26 @@ export default function App() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      if (!session) setRoom(null);
+      if (!session) {
+        setRoom(null);
+        clearInterval(heartbeatRef.current);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Keep last_seen fresh while the user is active
+  useEffect(() => {
+    clearInterval(heartbeatRef.current);
+    if (session) {
+      supabase.rpc('update_last_seen').catch(() => {});
+      heartbeatRef.current = setInterval(() => {
+        supabase.rpc('update_last_seen').catch(() => {});
+      }, HEARTBEAT_MS);
+    }
+    return () => clearInterval(heartbeatRef.current);
+  }, [session?.user?.id]);
 
   if (loading) return <div className="loading">Loading...</div>;
 

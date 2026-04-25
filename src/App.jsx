@@ -34,10 +34,9 @@ export default function App() {
   useEffect(() => {
     clearInterval(heartbeatRef.current);
     if (session) {
-      supabase.rpc('update_last_seen').catch(() => {});
-      heartbeatRef.current = setInterval(() => {
-        supabase.rpc('update_last_seen').catch(() => {});
-      }, HEARTBEAT_MS);
+      const ping = () => { supabase.rpc('update_last_seen').then(() => {}, () => {}); };
+      ping();
+      heartbeatRef.current = setInterval(ping, HEARTBEAT_MS);
     }
     return () => clearInterval(heartbeatRef.current);
   }, [session?.user?.id]);
